@@ -44,17 +44,14 @@ class CustomEnv(gym.Env):
             'additional_info': infos
         }
 
-        # Check if all robots are complete (i.e., each robot has reached its specific goal)
+        # Check if all robots are complete
         if all(self.complete):
-            # Reset completion status for all robots
-            self.complete = [False] * self.n_robots  
-            # No need to reset the environment here, just continue the episode
+            observation, _ = self.reset()  # Reset the environment here
 
-        total_reward = sum(rewards)  # Aggregate reward for compatibility with most RL algorithms
-        terminated = all(self.complete)  # If all robots complete their tasks, the episode terminates
+        total_reward = sum(rewards)
+        terminated = all(self.complete)
         truncated = False
         return observation, total_reward, terminated, truncated, aggregated_info
-
 
 
 
@@ -63,6 +60,7 @@ class CustomEnv(gym.Env):
         self.mobile_robot.reset_pathPlanning1()
         self.state = self.mobile_robot.get_stackSet()
         self.complete = [False] * self.n_robots  # Reset completion status
+        self.mobile_robot.goal_reached = [False] * self.n_robots  # Ensure all goal statuses are reset
         observation = self.render()
         return observation, {}
 
@@ -128,10 +126,12 @@ class MobileRobot(object):
         self.create_starts()
         self.get_gridSet()
         self.robots_pos = self.starts.copy()
+        self.goal_reached = [False] * self.n_robots  # Ensure goal statuses are reset
         self.get_paths()
         self.get_stateSet()
         stack_set = self.get_stackSet()
         return stack_set
+
 
     def create_obstacles(self):
         while True:
